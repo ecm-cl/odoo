@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_account_legacy_import_batch_user,account.legacy.import.batch.user,model_account_legacy_import_batch,account.group_account_user,1,0,0,0
+access_account_legacy_import_batch_manager,account.legacy.import.batch.manager,model_account_legacy_import_batch,account.group_account_manager,1,1,1,1
