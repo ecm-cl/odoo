@@ -1,7 +1,7 @@
 {
     "name": "Valsegur Legacy Fields",
     "summary": "Audit fields for historical accounting migrations",
-    "version": "19.0.2.0.0",
+    "version": "19.0.3.1.0",
     "category": "Accounting/Accounting",
     "author": "ECM",
     "license": "LGPL-3",
@@ -9,6 +9,7 @@
     "data": [
         "security/ir.model.access.csv",
         "views/account_legacy_import_batch_views.xml",
+        "views/account_move_views.xml",
     ],
     "installable": True,
     "application": False,

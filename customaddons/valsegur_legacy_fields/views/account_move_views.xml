@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Asientos contables: casilleros opcionales con encabezados breves. -->
+    <record id="view_move_tree_legacy_fields" model="ir.ui.view">
+        <field name="name">account.move.list.legacy.fields</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_tree"/>
+        <field name="arch" type="xml">
+            <field name="ref" position="after">
+                <field name="x_legacy_batch_id" string="Migración: Lote" optional="show"/>
+                <field name="x_legacy_key" string="Migración: ID" optional="show"/>
+                <field name="x_legacy_numero" string="Origen: Número de comprobante (NUMERO)" optional="show"/>
+                <field name="x_legacy_tip_comp" string="Origen: Tipo de comprobante (TIP_COMP)" optional="show"/>
+                <field name="x_legacy_ano_mov" string="Origen: Año de movimiento (ANO_MOV)" optional="show"/>
+                <!-- Cambia la clave de preferencias del listado para aplicar estos nuevos valores por defecto. -->
+                <field name="write_date" column_invisible="True"/>
+            </field>
+            <xpath expr="//field[@name='partner_id' and @optional]" position="attributes">
+                <attribute name="optional">hide</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Asientos contables: opciones "Búsqueda COLUMNA para VALOR". -->
+    <record id="view_account_move_filter_legacy_fields" model="ir.ui.view">
+        <field name="name">account.move.search.legacy.fields</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_account_move_filter"/>
+        <field name="arch" type="xml">
+            <field name="ref" position="after">
+                <field name="x_legacy_batch_id" string="Migración: Lote"/>
+                <field name="x_legacy_key" string="Migración: ID"/>
+                <field name="x_legacy_numero" string="Origen: Número de comprobante (NUMERO)"/>
+                <field name="x_legacy_tip_comp" string="Origen: Tipo de comprobante (TIP_COMP)"/>
+                <field name="x_legacy_ano_mov" string="Origen: Año de movimiento (ANO_MOV)"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Apuntes contables: todos los campos fuente como columnas opcionales. -->
+    <record id="view_move_line_tree_legacy_fields" model="ir.ui.view">
+        <field name="name">account.move.line.list.legacy.fields</field>
+        <field name="model">account.move.line</field>
+        <field name="inherit_id" ref="account.view_move_line_tree"/>
+        <field name="arch" type="xml">
+            <field name="ref" position="after">
+                <field name="x_legacy_linea" string="Origen: Número de línea (LINEA)" optional="hide"/>
+                <field name="x_legacy_cuenta" string="Origen: Cuenta (CUENTA)" optional="hide"/>
+                <field name="x_legacy_cta_item" string="Origen: CTA ítem (CTA_ITEM)" optional="hide"/>
+                <field name="x_legacy_dig_ver" string="Origen: Dígito verificador (DIG_VER)" optional="hide"/>
+                <field name="x_legacy_vencimiento" string="Origen: Vencimiento (VENCTO)" optional="hide"/>
+                <field name="x_legacy_centro" string="Origen: Centro (CENTRO)" optional="show"/>
+                <field name="x_legacy_tip_anal" string="Origen: Tipo de análisis (TIP_ANAL)" optional="hide"/>
+                <field name="x_legacy_tip_docu" string="Origen: Tipo de documento (TIP_DOCU)" optional="show"/>
+                <field name="x_legacy_num_docu" string="Origen: Número de documento (NUM_DOCU)" optional="show"/>
+                <field name="x_legacy_tip_glosa" string="Origen: Tipo de glosa (TIP_GLOSA)" optional="show"/>
+                <field name="x_legacy_ano" string="Origen: Año (ANO)" optional="hide"/>
+                <field name="x_legacy_tip_tabla" string="Origen: Tipo de tabla (TIP_TABLA)" optional="show"/>
+                <field name="x_legacy_num_adic" string="Origen: Número adicional (NUM_ADIC)" optional="hide"/>
+                <field name="x_legacy_cod_mon" string="Origen: Código de moneda (COD_MON)" optional="hide"/>
+                <field name="x_legacy_paridad" string="Origen: Paridad (PARIDAD)" optional="hide"/>
+                <field name="x_legacy_bimfol" string="Origen: BIM/Folio (BIMFOL)" optional="hide"/>
+                <field name="x_legacy_tip_bim" string="Origen: Tipo BIM (TIP_BIM)" optional="show"/>
+                <field name="x_legacy_cambio" string="Origen: Cambio (CAMBIO)" optional="hide"/>
+                <field name="x_legacy_af_flujo" string="Origen: AF flujo (AF_FLUJO)" optional="show"/>
+                <field name="x_legacy_debe_ad" string="Origen: Debe adicional (DEBE_AD)" optional="hide"/>
+                <field name="x_legacy_haber_ad" string="Origen: Haber adicional (HABER_AD)" optional="hide"/>
+                <field name="x_legacy_descrip" string="Origen: Descripción (DESCRIP)" optional="hide"/>
+                <field name="x_legacy_nombre" string="Origen: Nombre (NOMBRE)" optional="show"/>
+                <!-- Cambia la clave de preferencias del listado para aplicar estos nuevos valores por defecto. -->
+                <field name="write_date" column_invisible="True"/>
+            </field>
+            <xpath expr="//field[@name='invoice_date' and @optional]" position="attributes">
+                <attribute name="optional">show</attribute>
+            </xpath>
+            <xpath expr="//field[@name='company_id' and @optional]" position="attributes">
+                <attribute name="optional">show</attribute>
+            </xpath>
+            <xpath expr="//field[@name='journal_id' and @optional]" position="attributes">
+                <attribute name="optional">show</attribute>
+            </xpath>
+            <xpath expr="//field[@name='ref' and @optional]" position="attributes">
+                <attribute name="optional">show</attribute>
+            </xpath>
+            <xpath expr="//field[@name='date_maturity' and @optional]" position="attributes">
+                <attribute name="optional">show</attribute>
+            </xpath>
+            <xpath expr="//field[@name='balance' and @optional]" position="attributes">
+                <attribute name="optional">show</attribute>
+            </xpath>
+            <xpath expr="//field[@name='matching_number' and @optional]" position="attributes">
+                <attribute name="optional">hide</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Apuntes contables: opciones "Búsqueda COLUMNA para VALOR". -->
+    <record id="view_account_move_line_filter_legacy_fields" model="ir.ui.view">
+        <field name="name">account.move.line.search.legacy.fields</field>
+        <field name="model">account.move.line</field>
+        <field name="inherit_id" ref="account.view_account_move_line_filter"/>
+        <field name="arch" type="xml">
+            <field name="ref" position="after">
+                <field name="x_legacy_linea" string="Origen: Número de línea (LINEA)"/>
+                <field name="x_legacy_cuenta" string="Origen: Cuenta (CUENTA)"/>
+                <field name="x_legacy_cta_item" string="Origen: CTA ítem (CTA_ITEM)"/>
+                <field name="x_legacy_dig_ver" string="Origen: Dígito verificador (DIG_VER)"/>
+                <field name="x_legacy_vencimiento" string="Origen: Vencimiento (VENCTO)"/>
+                <field name="x_legacy_centro" string="Origen: Centro (CENTRO)"/>
+                <field name="x_legacy_tip_anal" string="Origen: Tipo de análisis (TIP_ANAL)"/>
+                <field name="x_legacy_tip_docu" string="Origen: Tipo de documento (TIP_DOCU)"/>
+                <field name="x_legacy_num_docu" string="Origen: Número de documento (NUM_DOCU)"/>
+                <field name="x_legacy_tip_glosa" string="Origen: Tipo de glosa (TIP_GLOSA)"/>
+                <field name="x_legacy_ano" string="Origen: Año (ANO)"/>
+                <field name="x_legacy_tip_tabla" string="Origen: Tipo de tabla (TIP_TABLA)"/>
+                <field name="x_legacy_num_adic" string="Origen: Número adicional (NUM_ADIC)"/>
+                <field name="x_legacy_cod_mon" string="Origen: Código de moneda (COD_MON)"/>
+                <field name="x_legacy_paridad" string="Origen: Paridad (PARIDAD)"/>
+                <field name="x_legacy_bimfol" string="Origen: BIM/Folio (BIMFOL)"/>
+                <field name="x_legacy_tip_bim" string="Origen: Tipo BIM (TIP_BIM)"/>
+                <field name="x_legacy_cambio" string="Origen: Cambio (CAMBIO)"/>
+                <field name="x_legacy_af_flujo" string="Origen: AF flujo (AF_FLUJO)"/>
+                <field name="x_legacy_debe_ad" string="Origen: Debe adicional (DEBE_AD)"/>
+                <field name="x_legacy_haber_ad" string="Origen: Haber adicional (HABER_AD)"/>
+                <field name="x_legacy_descrip" string="Origen: Descripción (DESCRIP)"/>
+                <field name="x_legacy_nombre" string="Origen: Nombre (NOMBRE)"/>
+            </field>
+        </field>
+    </record>
+</odoo>
