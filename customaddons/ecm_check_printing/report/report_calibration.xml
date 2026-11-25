@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Grilla milimetrada: se imprime sobre el cheque en blanco del banco
+         para leer directamente las coordenadas de cada campo. -->
+    <template id="report_vsg_check_calibration">
+        <t t-call="web.html_container">
+            <style>
+                @page { margin: 0; }
+                html, body { margin: 0 !important; padding: 0 !important;
+                             overflow: hidden !important; }
+            </style>
+            <t t-foreach="docs" t-as="journal">
+                <!-- Se dibuja medio milimetro por debajo del alto de la pagina:
+                     a ras exacto wkhtmltopdf desborda y abre una hoja en blanco. -->
+                <div class="page"
+                     t-attf-style="position:relative;overflow:hidden;width:#{journal.vsg_check_width - 0.5}mm;height:#{journal.vsg_check_height - 0.5}mm;font-family:Arial,Helvetica,sans-serif;">
+
+                    <!-- Lineas verticales cada 5 mm -->
+                    <t t-foreach="range(0, int(journal.vsg_check_width), 5)" t-as="x">
+                        <div t-attf-style="position:absolute;left:#{x}mm;top:0;width:#{'0.15mm' if x % 10 else '0.3mm'};height:#{journal.vsg_check_height}mm;background-color:#{'#999' if x % 10 else '#111'};"/>
+                        <t t-if="not x % 10">
+                            <div t-attf-style="position:absolute;left:#{x + 0.4}mm;top:0.4mm;font-size:5pt;color:#222;">
+                                <span t-esc="x"/>
+                            </div>
+                        </t>
+                    </t>
+
+                    <!-- Lineas horizontales cada 5 mm -->
+                    <t t-foreach="range(0, int(journal.vsg_check_height), 5)" t-as="y">
+                        <div t-attf-style="position:absolute;left:0;top:#{y}mm;height:#{'0.15mm' if y % 10 else '0.3mm'};width:#{journal.vsg_check_width}mm;background-color:#{'#999' if y % 10 else '#111'};"/>
+                        <t t-if="not y % 10">
+                            <div t-attf-style="position:absolute;left:0.4mm;top:#{y + 0.4}mm;font-size:5pt;color:#222;">
+                                <span t-esc="y"/>
+                            </div>
+                        </t>
+                    </t>
+
+                    <div t-attf-style="position:absolute;left:#{journal.vsg_check_width / 3}mm;top:#{journal.vsg_check_height - 6}mm;font-size:6pt;color:#111;background-color:#fff;padding:0.5mm 1mm;">
+                        <span t-esc="journal.display_name"/> -
+                        <span t-esc="int(journal.vsg_check_width)"/> x
+                        <span t-esc="int(journal.vsg_check_height)"/> mm
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

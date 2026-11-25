@@ -51,3 +51,7 @@ package.json
 /man/
 /share/
 /src/
+
+# Planillas de origen de la migracion: datos contables confidenciales.
+# CUSTOMIZATIONS.md lo exige: no se suben al repositorio.
+migration_artifacts/

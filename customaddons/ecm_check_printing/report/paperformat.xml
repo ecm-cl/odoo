@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="paperformat_vsg_check" model="report.paperformat">
+        <field name="name">Cheque formato chileno (160 x 70 mm)</field>
+        <field name="default" eval="False"/>
+        <field name="format">custom</field>
+        <field name="page_width">160</field>
+        <field name="page_height">70</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">0</field>
+        <field name="margin_bottom">0</field>
+        <field name="margin_left">0</field>
+        <field name="margin_right">0</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <field name="dpi">96</field>
+        <!-- sin esto wkhtmltopdf encoge el contenido (~0.82) y las posiciones
+             en milimetros dejan de corresponder con el papel -->
+        <field name="disable_shrinking" eval="True"/>
+    </record>
+</odoo>

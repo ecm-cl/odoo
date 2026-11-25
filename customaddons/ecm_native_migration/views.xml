@@ -1,0 +1,40 @@
+<odoo>
+  <record id="native_invoice_list" model="ir.ui.view">
+    <field name="name">account.move.list.native.flex</field>
+    <field name="model">account.move</field>
+    <field name="inherit_id" ref="account.view_invoice_tree"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='name']" position="after">
+        <field name="x_native_label" string="Número" decoration-danger="made_sequence_gap and state == 'posted'"/>
+      </xpath>
+      <xpath expr="//field[@name='name']" position="attributes"><attribute name="column_invisible">True</attribute></xpath>
+      <xpath expr="//field[@name='invoice_origin']" position="attributes"><attribute name="optional">show</attribute></xpath>
+    </field>
+  </record>
+  <record id="native_invoice_form" model="ir.ui.view">
+    <field name="name">account.move.form.native.flex</field>
+    <field name="model">account.move</field>
+    <field name="inherit_id" ref="account.view_move_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//h1/field[@name='name']" position="after">
+        <field name="x_native_candidate" invisible="1"/>
+        <field name="x_native_label" invisible="not x_native_candidate or move_type not in ('in_invoice','in_refund')"/>
+      </xpath>
+      <xpath expr="//h1/field[@name='name']" position="attributes">
+        <attribute name="invisible" add="x_native_candidate and move_type in ('in_invoice','in_refund')" separator=" or "/>
+      </xpath>
+      <xpath expr="//field[@name='invoice_origin']" position="after">
+        <field name="x_note_origin_ref" invisible="not x_note_origin_ref"/>
+      </xpath>
+      <xpath expr="//field[@name='invoice_origin']" position="attributes"><attribute name="invisible">not invoice_origin</attribute></xpath>
+    </field>
+  </record>
+  <record id="native_invoice_search" model="ir.ui.view">
+    <field name="name">account.move.search.native.flex</field>
+    <field name="model">account.move</field>
+    <field name="inherit_id" ref="account.view_account_invoice_filter"/>
+    <field name="arch" type="xml">
+      <field name="name" position="after"><field name="invoice_origin" string="Documento origen"/><field name="x_native_label"/></field>
+    </field>
+  </record>
+</odoo>

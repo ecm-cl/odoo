@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_account_journal_form_vsg_check" model="ir.ui.view">
+        <field name="name">account.journal.form.vsg.check</field>
+        <field name="model">account.journal</field>
+        <field name="inherit_id" ref="account.view_account_journal_form"/>
+        <field name="arch" type="xml">
+            <notebook position="inside">
+                <page name="vsg_check_printing" string="Cheques" invisible="type != 'bank'">
+                    <group>
+                        <field name="vsg_check_printing"/>
+                    </group>
+                    <group invisible="not vsg_check_printing">
+                        <group string="Formulario del banco">
+                            <field name="vsg_check_width"/>
+                            <field name="vsg_check_height"/>
+                            <field name="vsg_check_font_size"/>
+                            <field name="vsg_check_place"/>
+                            <field name="vsg_check_uppercase"/>
+                            <field name="vsg_check_words_currency"/>
+                            <field name="vsg_check_date_split"/>
+                            <field name="vsg_check_month_name"/>
+                        </group>
+                        <group string="Calibracion de la impresora">
+                            <field name="vsg_check_offset_x"/>
+                            <field name="vsg_check_offset_y"/>
+                            <button name="%(ecm_check_printing.action_report_vsg_check_calibration)d"
+                                    string="Imprimir grilla de calibracion"
+                                    type="action" class="btn-secondary" colspan="2"/>
+                        </group>
+                        <group string="Posicion de los campos (mm desde el borde superior izquierdo)">
+                            <field name="vsg_check_place_x"/>
+                            <field name="vsg_check_place_y"/>
+                            <field name="vsg_check_date_x" invisible="vsg_check_date_split"/>
+                            <field name="vsg_check_date_y"/>
+                            <field name="vsg_check_day_x" invisible="not vsg_check_date_split"/>
+                            <field name="vsg_check_month_x" invisible="not vsg_check_date_split"/>
+                            <field name="vsg_check_year_x" invisible="not vsg_check_date_split"/>
+                        </group>
+                        <group string="Formulario con casilleros">
+                            <field name="vsg_check_cells"/>
+                            <field name="vsg_check_date_cells" invisible="not vsg_check_cells"/>
+                            <field name="vsg_check_cells_y" invisible="not vsg_check_cells"/>
+                            <field name="vsg_check_year_preprinted" invisible="not vsg_check_cells"/>
+                            <field name="vsg_check_amount_first_x" invisible="not vsg_check_cells"/>
+                            <field name="vsg_check_amount_pitch" invisible="not vsg_check_cells"/>
+                            <field name="vsg_check_amount_count" invisible="not vsg_check_cells"/>
+                            <field name="vsg_check_amount_thousands" invisible="not vsg_check_cells"/>
+                            <field name="vsg_check_amount_fill" invisible="not vsg_check_cells"/>
+                            <field name="vsg_check_amount_cells_y" invisible="not vsg_check_cells"/>
+                        </group>
+                        <group string="Montos y beneficiario">
+                            <field name="vsg_check_amount_symbol"/>
+                            <field name="vsg_check_amount_x"/>
+                            <field name="vsg_check_amount_y"/>
+                            <field name="vsg_check_words_x"/>
+                            <field name="vsg_check_words_y"/>
+                            <field name="vsg_check_words_width"/>
+                            <field name="vsg_check_words_line_height"/>
+                            <field name="vsg_check_words_fill"/>
+                            <field name="vsg_check_words2_x"/>
+                            <field name="vsg_check_words2_y"/>
+                            <field name="vsg_check_words2_width"/>
+                            <field name="vsg_check_payee_bold"/>
+                            <field name="vsg_check_payee_x"/>
+                            <field name="vsg_check_payee_y"/>
+                            <field name="vsg_check_payee_width"/>
+                        </group>
+                    </group>
+                </page>
+            </notebook>
+        </field>
+    </record>
+</odoo>
