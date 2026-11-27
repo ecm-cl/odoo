@@ -64,19 +64,20 @@ falta, de modo que no hay un segundo boton de descarga.
 
 ## La hoja
 
-El cheque no se imprime solo: va apoyado en una esquina de una hoja cuyo
-tamaño es el que queda configurado en la impresora. Flex usa 98 x 190 mm con
-el lado corto hacia el alimentador, que es el valor por defecto del diario.
+El cheque no se imprime solo: va dentro de una hoja cuyo tamaño es el que
+queda configurado en la impresora. La hoja son 76,2 x 160 mm y el cheque
+70 x 160, de modo que solo sobran 6,2 mm, a lo ancho y repartidos a los dos
+lados. Dónde se apoya lo dice el diario en `Hoja: posición X / Y`.
 
 El PDF se compagina horizontal -que es como están medidas las coordenadas- y la
 página se gira un cuarto de vuelta al generarse, en lugar de rotar el HTML:
-wkhtmltopdf dibuja mal las transformaciones CSS. El resultado es que el dialogo
-de impresión muestra la hoja vertical, igual que Flex.
+wkhtmltopdf dibuja mal las transformaciones CSS. El resultado es que la hoja
+entra por el lado corto, igual que con Flex.
 
-El tamaño de hoja de Odoo es un entero en milímetros, así que la página sale
-de 98 x 190 mm y no de los 98,42 x 190,5 exactos de Flex. Medio milímetro no
-mueve nada, porque el contenido se posiciona desde la esquina superior
-izquierda.
+El tamaño de hoja de Odoo es un entero en milímetros y 76,2 no lo es, así que
+el formato declara 161 x 77 y el código recorta el `MediaBox` a la medida
+exacta al girar la página, anclando el recorte en la esquina superior
+izquierda para no mover ningún campo.
 
 ## Valores por banco
 
@@ -107,23 +108,40 @@ aplican a diarios nuevos.
 
 ## Como configurar la impresora
 
-El papel es el tamanio estandar **Sobre Monarch**: 3,875 x 7,5 pulgadas, o sea
-98,425 x 190,5 mm. No hay que definir una medida personalizada en la impresora,
-basta elegir ese tamanio. Es exactamente lo que mide la pagina que genera el
-reporte.
+El papel es un tamanio **personalizado** de 76,2 x 160 mm, creado en el driver
+con el nombre "Cheque". 160 es el largo exacto del cheque; 76,2 son 3 pulgadas,
+el ancho minimo que acepta la LaserJet 1020 y por tanto lo mas estrecho posible.
+El cheque mide 70 x 160.
 
-En el dialogo de impresion del navegador:
+Antes se uso el tamanio estandar Sobre Monarch, 98,42 x 190,5. Se descarto
+porque deja 30,5 mm de holgura a lo largo, y el cheque no cae donde uno supone
+dentro de esa holgura: de ahi salio un desplazamiento de 27 mm que costo media
+tarde encontrar. Con un papel del largo exacto del cheque ese eje deja de poder
+equivocarse, y a lo ancho la holgura baja de 28,4 a 6,2 mm.
 
-- Tamanio de papel: **Sobre Monarch**
-- Orientacion: **vertical**
-- Escala: **100 %** o *Tamanio real*, nunca *Ajustar a la pagina*
+**El cheque se imprime centrado, no pegado a un lado.** Las guias del
+alimentador no bajan de 76 mm y el cheque mide 70, asi que nunca lo sujetan;
+pero la impresora lo recentra al tirar de el. Por eso `Hoja: posicion Y` vale
+3,1, que es (76,2 - 70) / 2.
 
-Lo de la orientacion tiene truco. El aplicativo Flex esta configurado en
-*horizontal*, pero eso es como Flex habla con el driver por dentro: el mismo
-dibuja su texto girado. El PDF que genera -y el nuestro- se presentan al driver
-en **vertical** de 3,875 x 7,5, con el contenido ya girado dentro. Si en el
-navegador se elige horizontal, la pagina se gira una segunda vez y el cheque
-sale cruzado respecto del formulario.
+### No imprimir desde el dialogo de Chrome
+
+Chrome muestra el tamanio "Cheque" en su lista pero no lo respeta al enviar el
+trabajo: manda otro tamanio y centra la pagina dentro de el, con lo que el
+cheque sale corrido unos 6 cm. El dialogo del sistema si lo respeta.
+
+La forma fiable:
+
+1. Crear una **segunda cola** de la misma impresora, por ejemplo
+   `HP LaserJet 1020 (Cheques)`, sobre el mismo puerto y el mismo driver.
+2. En sus Preferencias de impresion, dejar guardado el tamanio "Cheque" y
+   orientacion vertical. La otra cola se queda en Carta para todo lo demas.
+3. Arrancar Chrome con `--disable-print-preview`, de modo que el boton Imprimir
+   lleve directo al dialogo del sistema. Ahi no hay nada que elegir: el tamanio
+   y la orientacion los pone el driver.
+
+**No usar `--kiosk-printing`:** imprime por el camino interno de Chrome, que es
+justo el que falla.
 
 ## Donde queda el boton
 

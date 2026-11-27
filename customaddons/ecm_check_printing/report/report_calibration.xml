@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Grilla milimetrada: se imprime sobre el cheque en blanco del banco
-         para leer directamente las coordenadas de cada campo. -->
+    <!-- Grilla milimetrada de la HOJA entera. Se imprime sobre un cheque
+         anulado para leer en que coordenada de la hoja cae su borde.
+
+         Dos decisiones de dibujo:
+         - Los numeros van metidos hacia dentro: toda laser tiene un borde
+           muerto de 4 o 5 mm y, pegados al canto, no se imprimen.
+         - Se dibuja el contorno del cheque en la posicion que declara el
+           diario. Impresa sobre un cheque anulado, apoyado como se vaya a
+           apoyar siempre, esa caja tiene que coincidir con sus bordes. -->
     <template id="report_vsg_check_calibration">
         <t t-call="web.html_container">
             <style>
@@ -10,35 +17,47 @@
                              overflow: hidden !important; }
             </style>
             <t t-foreach="docs" t-as="journal">
-                <!-- Se dibuja medio milímetro por debajo del alto de la página:
-                     a ras exacto wkhtmltopdf desborda y abre una hoja en blanco. -->
+                <t t-set="largo" t-value="journal.vsg_check_sheet_long or 190.5"/>
+                <t t-set="ancho" t-value="journal.vsg_check_sheet_short or 98.42"/>
+                <!-- Medio milimetro por debajo del alto de la pagina: a ras
+                     exacto wkhtmltopdf desborda y abre una hoja en blanco. -->
                 <div class="page"
-                     t-attf-style="position:relative;overflow:hidden;width:#{journal.vsg_check_width - 0.5}mm;height:#{journal.vsg_check_height - 0.5}mm;font-family:Arial,Helvetica,sans-serif;">
+                     t-attf-style="position:relative;overflow:hidden;width:#{largo - 0.5}mm;height:#{ancho - 0.5}mm;font-family:Arial,Helvetica,sans-serif;">
 
-                    <!-- Lineas verticales cada 5 mm -->
-                    <t t-foreach="range(0, int(journal.vsg_check_width), 5)" t-as="x">
-                        <div t-attf-style="position:absolute;left:#{x}mm;top:0;width:#{'0.15mm' if x % 10 else '0.3mm'};height:#{journal.vsg_check_height}mm;background-color:#{'#999' if x % 10 else '#111'};"/>
+                    <!-- Lineas a lo largo de la hoja, cada 5 mm -->
+                    <t t-foreach="range(0, int(largo), 5)" t-as="x">
+                        <div t-attf-style="position:absolute;left:#{x}mm;top:0;width:#{'0.15mm' if x % 10 else '0.3mm'};height:#{ancho}mm;background-color:#{'#bbb' if x % 10 else '#111'};"/>
                         <t t-if="not x % 10">
-                            <div t-attf-style="position:absolute;left:#{x + 0.4}mm;top:0.4mm;font-size:5pt;color:#222;">
+                            <div t-attf-style="position:absolute;left:#{x + 0.5}mm;top:7mm;font-size:5pt;color:#111;background-color:#fff;">
                                 <span t-esc="x"/>
                             </div>
                         </t>
                     </t>
 
-                    <!-- Lineas horizontales cada 5 mm -->
-                    <t t-foreach="range(0, int(journal.vsg_check_height), 5)" t-as="y">
-                        <div t-attf-style="position:absolute;left:0;top:#{y}mm;height:#{'0.15mm' if y % 10 else '0.3mm'};width:#{journal.vsg_check_width}mm;background-color:#{'#999' if y % 10 else '#111'};"/>
+                    <!-- Lineas a lo ancho de la hoja, cada 5 mm -->
+                    <t t-foreach="range(0, int(ancho), 5)" t-as="y">
+                        <div t-attf-style="position:absolute;left:0;top:#{y}mm;height:#{'0.15mm' if y % 10 else '0.3mm'};width:#{largo}mm;background-color:#{'#bbb' if y % 10 else '#111'};"/>
                         <t t-if="not y % 10">
-                            <div t-attf-style="position:absolute;left:0.4mm;top:#{y + 0.4}mm;font-size:5pt;color:#222;">
+                            <div t-attf-style="position:absolute;left:7mm;top:#{y + 0.5}mm;font-size:5pt;color:#111;background-color:#fff;">
                                 <span t-esc="y"/>
                             </div>
                         </t>
                     </t>
 
-                    <div t-attf-style="position:absolute;left:#{journal.vsg_check_width / 3}mm;top:#{journal.vsg_check_height - 6}mm;font-size:6pt;color:#111;background-color:#fff;padding:0.5mm 1mm;">
-                        <span t-esc="journal.display_name"/> -
-                        <span t-esc="int(journal.vsg_check_width)"/> x
-                        <span t-esc="int(journal.vsg_check_height)"/> mm
+                    <!-- Donde el diario cree que se apoya el cheque. Impresa
+                         sobre un cheque anulado, esta caja tiene que coincidir
+                         con sus bordes. Lo que no coincida es el ajuste que
+                         falta en 'Hoja: posicion X / Y'. -->
+                    <div t-attf-style="position:absolute;left:#{journal.vsg_check_sheet_x}mm;top:#{journal.vsg_check_sheet_y}mm;width:#{journal.vsg_check_width}mm;height:#{journal.vsg_check_height}mm;border:0.6mm solid #000;box-sizing:border-box;"/>
+                    <div t-attf-style="position:absolute;left:#{journal.vsg_check_sheet_x + 10}mm;top:#{journal.vsg_check_sheet_y + 2}mm;font-size:6pt;color:#000;background-color:#fff;padding:0.5mm 1mm;">
+                        cheque segun el diario:
+                        <span t-esc="round(journal.vsg_check_sheet_x, 2)"/>,
+                        <span t-esc="round(journal.vsg_check_sheet_y, 2)"/> mm
+                    </div>
+
+                    <!-- Hoja declarada -->
+                    <div t-attf-style="position:absolute;left:#{largo / 2.0}mm;top:#{ancho / 2.0 - 8}mm;font-size:6pt;color:#111;background-color:#fff;padding:0.5mm 1mm;">
+                        hoja <span t-esc="round(largo, 2)"/> x <span t-esc="round(ancho, 2)"/> mm
                     </div>
                 </div>
             </t>

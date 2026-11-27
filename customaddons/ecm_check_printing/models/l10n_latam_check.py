@@ -379,24 +379,31 @@ class L10nLatamCheck(models.Model):
     def _vsg_cross_lines(self):
         """Las dos rayas paralelas del cruzado: [(x1, y1, x2, y2)] en mm.
 
-        No son de 45 grados: en el cheque chileno cruzan casi toda la altura
-        y avanzan poco a lo largo, así que el alto y el ancho se declaran por
-        separado. Las coordenadas van en el marco de la HOJA, igual que todas
-        las demas, no en el del cheque.
+        Un cruzado corta la esquina de borde a borde, no es un segmento
+        suelto flotando dentro del cheque. Cada raya se define por donde
+        cruza los bordes: ``ancho`` es a cuantos mm del vertice toca el borde
+        superior y ``alto`` a cuantos toca el izquierdo. La segunda raya es
+        paralela, separada ``gap`` en perpendicular, y tambien llega a los
+        dos bordes.
+
+        No puede alargarse hacia abajo: la franja de 16 mm del borde inferior
+        esta reservada para los caracteres magneticos.
         """
         self.ensure_one()
         journal = self._vsg_journal()
-        ancho = journal.vsg_check_cross_width or 27.0
-        alto = journal.vsg_check_cross_height or 52.0
-        # separacion perpendicular pedida, repartida sobre los dos ejes
-        largo = (ancho ** 2 + alto ** 2) ** 0.5 or 1.0
-        sep = journal.vsg_check_cross_gap or 3.5
-        dx, dy = sep * alto / largo, sep * ancho / largo
+        ancho = journal.vsg_check_cross_width or 22.0
+        alto = journal.vsg_check_cross_height or 22.0
+        # el vertice de la esquina, en el marco de la HOJA
         x0 = journal.vsg_check_cross_x + journal.vsg_check_offset_x + journal.vsg_check_sheet_x
         y0 = journal.vsg_check_cross_y + journal.vsg_check_offset_y + journal.vsg_check_sheet_y
+        # la recta corta los ejes en (ancho, 0) y (0, alto); una paralela a
+        # distancia perpendicular 'gap' corta en los mismos puntos escalados
+        sep = journal.vsg_check_cross_gap or 3.5
+        diagonal = (ancho ** 2 + alto ** 2) ** 0.5
+        factor = 1.0 + sep * diagonal / (ancho * alto) if ancho and alto else 1.0
         return [
-            (x0 + i * dx, y0 + alto + i * dy, x0 + ancho + i * dx, y0 + i * dy)
-            for i in (0, 1)
+            (x0, y0 + alto * f, x0 + ancho * f, y0)
+            for f in (1.0, factor)
         ]
 
     # ------------------------------------------------------------------

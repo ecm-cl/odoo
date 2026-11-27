@@ -9,11 +9,11 @@
          holgado a propósito: al girar la página se le fija el MediaBox a la
          medida exacta del diario, anclado en la esquina superior izquierda. -->
     <record id="paperformat_vsg_check" model="report.paperformat">
-        <field name="name">Hoja de cheque (98,42 x 190,5 mm)</field>
+        <field name="name">Hoja de cheque (76,2 x 160 mm)</field>
         <field name="default" eval="False"/>
         <field name="format">custom</field>
-        <field name="page_width">191</field>
-        <field name="page_height">99</field>
+        <field name="page_width">161</field>
+        <field name="page_height">77</field>
         <field name="orientation">Portrait</field>
         <field name="margin_top">0</field>
         <field name="margin_bottom">0</field>

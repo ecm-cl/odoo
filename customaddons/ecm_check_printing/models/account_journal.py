@@ -207,14 +207,24 @@ class AccountJournal(models.Model):
     # --- cruzado ---------------------------------------------------------
     vsg_check_crossed_default = fields.Boolean(
         string="Cheque: cruzado por defecto", default=True)
-    vsg_check_cross_x = fields.Float(string="Cruzado: X (mm)", default=13.4)
-    vsg_check_cross_y = fields.Float(string="Cruzado: Y (mm)", default=16.6)
+    vsg_check_cross_x = fields.Float(
+        string="Cruzado: X del vertice (mm)", default=3.35,
+        help="Esquina desde la que se corta. Por defecto, la esquina "
+             "superior izquierda del cheque dentro de la hoja.")
+    vsg_check_cross_y = fields.Float(
+        string="Cruzado: Y del vertice (mm)", default=13.58)
     vsg_check_cross_width = fields.Float(
-        string="Cruzado: avance a lo largo del cheque (mm)", default=27.0)
+        string="Cruzado: corta el borde superior a (mm)", default=22.0)
     vsg_check_cross_height = fields.Float(
-        string="Cruzado: avance a lo alto del cheque (mm)", default=52.0)
+        string="Cruzado: corta el borde izquierdo a (mm)", default=22.0)
     vsg_check_cross_gap = fields.Float(string="Cruzado: separacion entre rayas (mm)", default=3.5)
     vsg_check_cross_thickness = fields.Float(string="Cruzado: grosor (mm)", default=0.4)
+    # El cruzado va corto y en la esquina superior izquierda. No puede
+    # alargarse hacia abajo: la Circular SBIF 3.425, capitulo 6-1, numeral
+    # 1.2.1 letra g, reserva los 16 mm del borde inferior para los
+    # caracteres magneticos CMC-7 y prohibe imprimir ahi. En un cheque de
+    # 70 mm eso es todo lo que pase de los 54, y medido sobre los
+    # formularios reales la tinta magnetica empieza ya en los 49 mm.
 
     @api.model
     def _vsg_check_position_fields(self):
