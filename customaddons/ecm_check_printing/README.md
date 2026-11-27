@@ -105,6 +105,26 @@ los escriban.
 Los valores por defecto de los campos son los de Banco de Chile, y solo se
 aplican a diarios nuevos.
 
+## Como configurar la impresora
+
+El papel es el tamanio estandar **Sobre Monarch**: 3,875 x 7,5 pulgadas, o sea
+98,425 x 190,5 mm. No hay que definir una medida personalizada en la impresora,
+basta elegir ese tamanio. Es exactamente lo que mide la pagina que genera el
+reporte.
+
+En el dialogo de impresion del navegador:
+
+- Tamanio de papel: **Sobre Monarch**
+- Orientacion: **vertical**
+- Escala: **100 %** o *Tamanio real*, nunca *Ajustar a la pagina*
+
+Lo de la orientacion tiene truco. El aplicativo Flex esta configurado en
+*horizontal*, pero eso es como Flex habla con el driver por dentro: el mismo
+dibuja su texto girado. El PDF que genera -y el nuestro- se presentan al driver
+en **vertical** de 3,875 x 7,5, con el contenido ya girado dentro. Si en el
+navegador se elige horizontal, la pagina se gira una segunda vez y el cheque
+sale cruzado respecto del formulario.
+
 ## Donde queda el boton
 
 - Ficha del cheque propio (`l10n_latam.check`): boton **Imprimir cheque**.
