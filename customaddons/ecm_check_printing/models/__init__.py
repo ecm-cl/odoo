@@ -1,3 +1,5 @@
 from . import account_journal
 from . import l10n_latam_check
 from . import account_payment
+from . import ir_actions_report
+from . import report_check

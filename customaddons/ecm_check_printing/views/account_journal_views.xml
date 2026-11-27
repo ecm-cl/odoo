@@ -15,20 +15,52 @@
                             <field name="vsg_check_width"/>
                             <field name="vsg_check_height"/>
                             <field name="vsg_check_font_size"/>
+                            <field name="vsg_check_place_font_size"/>
+                            <field name="vsg_check_words_font_size"/>
+                            <field name="vsg_check_ascent"/>
                             <field name="vsg_check_place"/>
                             <field name="vsg_check_uppercase"/>
                             <field name="vsg_check_words_currency"/>
                             <field name="vsg_check_date_split"/>
                             <field name="vsg_check_month_name"/>
                         </group>
-                        <group string="Calibracion de la impresora">
+                        <group string="Hoja de impresión">
+                            <field name="vsg_check_sheet_vertical"/>
+                            <field name="vsg_check_sheet_long"/>
+                            <field name="vsg_check_sheet_short"/>
+                            <field name="vsg_check_sheet_x"/>
+                            <field name="vsg_check_sheet_y"/>
+                        </group>
+                        <group string="Opciones por defecto del cheque">
+                            <field name="vsg_check_endorsement_default"/>
+                            <field name="vsg_check_crossed_default"/>
+                        </group>
+                        <group string="Tachado de 'a la orden de' y 'o al portador'">
+                            <field name="vsg_check_strike_char"/>
+                            <field name="vsg_check_strike_font"/>
+                            <field name="vsg_check_strike_order_x"/>
+                            <field name="vsg_check_strike_order_y"/>
+                            <field name="vsg_check_strike_order_width"/>
+                            <field name="vsg_check_strike_bearer_x"/>
+                            <field name="vsg_check_strike_bearer_y"/>
+                            <field name="vsg_check_strike_bearer_width"/>
+                        </group>
+                        <group string="Cruzado">
+                            <field name="vsg_check_cross_x"/>
+                            <field name="vsg_check_cross_y"/>
+                            <field name="vsg_check_cross_width"/>
+                            <field name="vsg_check_cross_height"/>
+                            <field name="vsg_check_cross_gap"/>
+                            <field name="vsg_check_cross_thickness"/>
+                        </group>
+                        <group string="Calibración de la impresora">
                             <field name="vsg_check_offset_x"/>
                             <field name="vsg_check_offset_y"/>
                             <button name="%(ecm_check_printing.action_report_vsg_check_calibration)d"
-                                    string="Imprimir grilla de calibracion"
+                                    string="Imprimir grilla de calibración"
                                     type="action" class="btn-secondary" colspan="2"/>
                         </group>
-                        <group string="Posicion de los campos (mm desde el borde superior izquierdo)">
+                        <group string="Posición de los campos (mm desde el borde superior izquierdo)">
                             <field name="vsg_check_place_x"/>
                             <field name="vsg_check_place_y"/>
                             <field name="vsg_check_date_x" invisible="vsg_check_date_split"/>

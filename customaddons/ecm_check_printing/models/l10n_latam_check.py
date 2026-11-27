@@ -26,7 +26,7 @@ class L10nLatamCheck(models.Model):
         return self.payment_id.journal_id
 
     def _vsg_amount_in_words(self):
-        """Monto en letras en espaniol, sin decimales cuando la moneda no los usa."""
+        """Monto en letras en español, sin decimales cuando la moneda no los usa."""
         self.ensure_one()
         if num2words is None:
             raise UserError(_(
@@ -41,7 +41,7 @@ class L10nLatamCheck(models.Model):
             # El formulario chileno ya trae impreso "PESOS M/L"
             return words
         unit = self._vsg_plural(currency.currency_unit_label or "Peso", integral).lower()
-        # En espaniol "millon" y "millones" exigen la preposicion: "dos millones de pesos".
+        # En español "millon" y "millones" exigen la preposición: "dos millones de pesos".
         link = "de " if words.split()[-1] in ("millon", "millones", "millón") else ""
         text = "%s %s%s" % (words, link, unit)
         if decimals:
@@ -55,19 +55,22 @@ class L10nLatamCheck(models.Model):
                 )
         return text.strip()
 
-    def _vsg_date_digit_cells(self):
-        """Digitos de la fecha con la X de su casilla: [(x_mm, digito), ...].
+    def _vsg_date_digit_cells(self, year_prefix=None):
+        """Digitos de la fecha con la X de su casilla: [(x_mm, dígito), ...].
 
         El formulario chileno trae ocho casillas: d d m m a a a a. Cuando el
-        banco ya imprimio el '20' del anio solo se llenan las dos ultimas.
+        formulario ya trae impreso el '20' del año solo se llenan las dos
+        últimas; ``year_prefix`` permite decidirlo en el momento de imprimir.
         """
         self.ensure_one()
         journal = self._vsg_journal()
+        if year_prefix is None:
+            year_prefix = not journal.vsg_check_year_preprinted
         try:
             xs = [float(v) for v in (journal.vsg_check_date_cells or "").split(",")]
         except ValueError:
             raise UserError(_(
-                "Las casillas de fecha del diario %s no son una lista de numeros "
+                "Las casillas de fecha del diario %s no son una lista de números "
                 "separados por coma.", journal.display_name))
         if len(xs) != 8:
             raise UserError(_(
@@ -76,35 +79,37 @@ class L10nLatamCheck(models.Model):
         partes = self._vsg_date_parts()
         digitos = partes["day"] + ("%02d" % int(partes["numeric_month"])) + partes["year"]
         pares = list(zip(xs, digitos))
-        if journal.vsg_check_year_preprinted:
+        if not year_prefix:
             pares = pares[:4] + pares[6:]
         return pares
 
     def _vsg_amount_digit_cells(self):
-        """Digitos del monto en sus casillas, como se llena un cheque a mano.
+        """Digitos del monto en sus casillas: [(x_centro_mm, carácter)].
 
-        El numero se alinea a la IZQUIERDA, el punto de miles ocupa una casilla
-        propia y las casillas sobrantes se rellenan con un asterisco para que no
-        se pueda agregar una cifra despues.
+        El número se alinea a la IZQUIERDA y las casillas sobrantes se rellenan
+        con un asterisco para que no se pueda agregar una cifra después. El
+        punto de miles no ocupa casilla: se dibuja en la juntura entre dos,
+        que es como lo imprime Flex.
         """
         self.ensure_one()
         journal = self._vsg_journal()
         cantidad = journal.vsg_check_amount_count or 0
         entero = int(abs(self.amount or 0.0))
-        texto = "{:,}".format(entero).replace(",", ".") if journal.vsg_check_amount_thousands             else str(entero)
-        if len(texto) > cantidad:
-            # sin separadores todavia puede caber
-            texto = str(entero)
-        if len(texto) > cantidad:
+        digitos = str(entero)
+        if len(digitos) > cantidad:
             raise UserError(_(
                 "El monto %s no cabe en las %s casillas del diario %s.",
-                texto, cantidad, journal.display_name))
+                digitos, cantidad, journal.display_name))
         relleno = (journal.vsg_check_amount_fill or "")[:1]
         if relleno:
-            texto = texto + relleno * (cantidad - len(texto))
+            digitos = digitos + relleno * (cantidad - len(digitos))
         paso = journal.vsg_check_amount_pitch or 5.0
         primera = journal.vsg_check_amount_first_x
-        return [(primera + i * paso, c) for i, c in enumerate(texto)]
+        celdas = [(primera + i * paso, c) for i, c in enumerate(digitos)]
+        if journal.vsg_check_amount_thousands:
+            for corte in range(len(str(entero)) - 3, 0, -3):
+                celdas.append((primera + corte * paso - paso / 2.0, "."))
+        return celdas
 
     def _vsg_amount_figures(self):
         """Monto en cifras con formato chileno: 17.000.000, sin espacio duro.
@@ -130,9 +135,9 @@ class L10nLatamCheck(models.Model):
 
     @staticmethod
     def _vsg_apocope(words):
-        """Aplica la apocope del espaniol: 'uno mil' se dice 'un mil'.
+        """Aplica la apócope del español: 'uno mil' se dice 'un mil'.
 
-        num2words no la aplica y en un cheque la redaccion importa. Se trabaja
+        num2words no la aplica y en un cheque la redacción importa. Se trabaja
         por palabras para no depender de expresiones regulares.
         """
         forms = {"uno": "un", "veintiuno": "veintiún"}
@@ -159,13 +164,12 @@ class L10nLatamCheck(models.Model):
 
         El formulario tiene dos renglones utiles. El texto ocupa lo que
         necesita y el resto se completa con guiones, igual que al llenarlo a
-        mano, para que no se pueda agregar nada despues.
+        mano, para que no se pueda agregar nada después.
         """
         self.ensure_one()
         journal = self._vsg_journal()
         cuerpo = self._vsg_words_font()
-        base = journal.vsg_check_font_size or 11.0
-        char_mm = self._vsg_char_mm() * cuerpo / base
+        char_mm = self._vsg_char_mm(cuerpo)
         renglones = [
             (journal.vsg_check_words_x, journal.vsg_check_words_y,
              journal.vsg_check_words_width),
@@ -186,7 +190,7 @@ class L10nLatamCheck(models.Model):
                     break
                 linea, i = tentativa, i + 1
             if relleno:
-                # el guion es mucho mas angosto que la letra media, asi que el
+                # el guion es mucho más angosto que la letra media, así que el
                 # relleno se calcula por ancho y no contando caracteres
                 usado = len(linea) * char_mm + (char_mm if linea else 0)
                 cabe = int(max(ancho - usado, 0) / (cuerpo * 0.12))
@@ -199,26 +203,38 @@ class L10nLatamCheck(models.Model):
                 self._vsg_amount_in_words()))
         return filas
 
-    def _vsg_char_mm(self):
-        """Ancho medio de caracter en mm, medido contra la salida real.
+    def _vsg_char_mm(self, font=None):
+        """Ancho medio de carácter en mm para un cuerpo dado.
 
-        En Arial las mayusculas ocupan bastante mas que la minuscula, y el
-        monto se imprime en mayusculas en casi todos los formularios.
+        En Arial las mayúsculas ocupan bastante más que la minúscula, y el
+        monto se imprime en mayúsculas en casi todos los formularios.
         """
         self.ensure_one()
         journal = self._vsg_journal()
-        font = journal.vsg_check_font_size or 11.0
+        font = font or journal.vsg_check_font_size or 12.0
         return font * (0.225 if journal.vsg_check_uppercase else 0.19)
+
+    def _vsg_top(self, baseline_mm, font_pt):
+        """Borde superior de la caja para una línea base dada.
+
+        Las coordenadas del diario apuntan a la línea base, igual que las de
+        Flex, porque es lo único que no se mueve al cambiar el cuerpo de
+        letra. CSS posiciona por el borde superior, así que hay que restar el
+        ascendente.
+        """
+        self.ensure_one()
+        ascent = self._vsg_journal().vsg_check_ascent or 0.9216
+        return baseline_mm - ascent * font_pt * 25.4 / 72.0
 
     def _vsg_place_font(self):
         """Cuerpo de letra de la ciudad, reducido para no invadir la fecha.
 
         La ciudad se imprime a la izquierda de las casillas de la fecha; un
-        nombre largo como "Vina del Mar" chocaria con el primer digito del dia.
+        nombre largo como "Vina del Mar" chocaria con el primer dígito del día.
         """
         self.ensure_one()
         journal = self._vsg_journal()
-        base = journal.vsg_check_font_size or 11.0
+        base = journal.vsg_check_place_font_size or journal.vsg_check_font_size or 10.0
         texto = journal.vsg_check_place or ""
         if not texto:
             return base
@@ -227,33 +243,33 @@ class L10nLatamCheck(models.Model):
             try:
                 primera = float((journal.vsg_check_date_cells or "").split(",")[0])
                 # 4 mm de resguardo: la casilla se declara por su centro y el
-                # digito ocupa algo mas de un milimetro hacia la izquierda
+                # dígito ocupa algo más de un milímetro hacia la izquierda
                 limite = primera - 4.0 - journal.vsg_check_place_x
             except (ValueError, IndexError):
                 limite = None
         if not limite or limite <= 0:
             return base
-        necesario = base * limite / (len(texto) * self._vsg_char_mm())
+        necesario = base * limite / (len(texto) * self._vsg_char_mm(base))
         return round(max(min(base, necesario), base * 0.6), 1)
 
     def _vsg_words_font(self):
-        """Cuerpo de letra del monto en palabras, reducido si no cabe en una linea.
+        """Cuerpo de letra del monto en palabras, reducido si no cabe.
 
-        En un cheque una sola linea se lee mejor que dos, de modo que primero
-        se achica la letra y solo despues se parte el texto.
+        En un cheque una sola línea se lee mejor que dos, de modo que primero
+        se achica la letra y solo después se parte el texto.
         """
         self.ensure_one()
         journal = self._vsg_journal()
-        base = journal.vsg_check_font_size or 11.0
-        ancho = journal.vsg_check_words_width or 140.0
+        base = journal.vsg_check_words_font_size or journal.vsg_check_font_size or 9.0
+        ancho = journal.vsg_check_words_width or 131.0
         largo = len(self._vsg_amount_in_words())
         if not largo:
             return base
-        necesario = base * ancho / (largo * self._vsg_char_mm())
+        necesario = base * ancho / (largo * self._vsg_char_mm(base))
         return round(max(min(base, necesario), base * 0.65), 1)
 
     def _vsg_date_parts(self):
-        """Dia, mes y anio de la fecha del cheque."""
+        """Día, mes y año de la fecha del cheque."""
         self.ensure_one()
         journal = self._vsg_journal()
         date = self.payment_date or self.payment_id.date or fields.Date.context_today(self)
@@ -274,7 +290,7 @@ class L10nLatamCheck(models.Model):
         return partner.name or ""
 
     def _vsg_text(self, value):
-        """Aplica mayusculas cuando el diario lo pide."""
+        """Aplica mayúsculas cuando el diario lo pide."""
         self.ensure_one()
         value = value or ""
         return value.upper() if self._vsg_journal().vsg_check_uppercase else value
@@ -291,22 +307,109 @@ class L10nLatamCheck(models.Model):
                 ))
             if not journal.vsg_check_printing:
                 raise UserError(_(
-                    "El diario %s no tiene habilitada la impresion de cheques. "
-                    "Actívala en Contabilidad / Configuracion / Diarios, pestania Cheques.",
+                    "El diario %s no tiene habilitada la impresión de cheques. "
+                    "Actívala en Contabilidad / Configuración / Diarios, pestaña Cheques.",
                     journal.display_name,
                 ))
             printable |= check
         return printable
 
-    def action_vsg_print_check(self):
-        checks = self._vsg_check_printable()
-        return self.env.ref(
-            "ecm_check_printing.action_report_vsg_check"
-        ).report_action(checks)
+    # ------------------------------------------------------------------
+    # Opciones de impresión
+    # ------------------------------------------------------------------
+    # Un cheque nominativo tacha 'a la orden de' y 'o al portador'; uno a la
+    # orden tacha solo 'o al portador'; uno al portador no tacha nada. El
+    # administrativo lo elige cheque por cheque, de modo que la opción llega
+    # al reporte en el diccionario ``data`` y el diario solo aporta el valor
+    # inicial del asistente.
+    ASTERISCO_EM = 0.389  # ancho del '*' en Arial, en fracciones del cuerpo
 
-    def action_vsg_print_calibration(self):
-        """Imprime la grilla milimetrada sobre el formulario del banco."""
-        journals = self.mapped("payment_id.journal_id")
-        return self.env.ref(
-            "ecm_check_printing.action_report_vsg_check_calibration"
-        ).report_action(journals)
+    def _vsg_options(self, data=None):
+        """Opciones efectivas de impresión, con el diario como respaldo."""
+        self.ensure_one()
+        journal = self._vsg_journal()
+        data = data or {}
+        endorsement = data.get("vsg_endorsement")
+        if endorsement not in ("nominativo", "orden", "portador"):
+            endorsement = journal.vsg_check_endorsement_default or "nominativo"
+        crossed = data.get("vsg_crossed")
+        if crossed is None:
+            crossed = journal.vsg_check_crossed_default
+        year_prefix = data.get("vsg_year_prefix")
+        if year_prefix is None:
+            year_prefix = not journal.vsg_check_year_preprinted
+        return {
+            "endorsement": endorsement,
+            "crossed": bool(crossed),
+            "year_prefix": bool(year_prefix),
+        }
+
+    def _vsg_strike_boxes(self, endorsement):
+        """Tachados a imprimir: [(x_mm, linea_base_mm, ancho_mm, texto)].
+
+        Flex imprime doce asteriscos de 8 pt sobre cada leyenda: 'a la orden
+        de' al principio del renglon del beneficiario, y 'o al portador' al
+        final del renglon del monto en letras, encima de los guiones.
+        """
+        self.ensure_one()
+        if endorsement == "portador":
+            return []
+        journal = self._vsg_journal()
+        cuerpo = journal.vsg_check_strike_font or 8.0
+        caracter = (journal.vsg_check_strike_char or "*")[:1] or "*"
+        paso = cuerpo * self.ASTERISCO_EM * 25.4 / 72.0
+        cajas = []
+        if endorsement == "nominativo":
+            ancho = journal.vsg_check_strike_order_width or 13.21
+            cajas.append((
+                journal.vsg_check_strike_order_x,
+                journal.vsg_check_strike_order_y or journal.vsg_check_payee_y,
+                ancho,
+                caracter * max(int(round(ancho / paso)), 1),
+            ))
+        ancho = journal.vsg_check_strike_bearer_width or 13.21
+        cajas.append((
+            journal.vsg_check_strike_bearer_x,
+            journal.vsg_check_strike_bearer_y or journal.vsg_check_words_y,
+            ancho,
+            caracter * max(int(round(ancho / paso)), 1),
+        ))
+        return cajas
+
+    def _vsg_cross_lines(self):
+        """Las dos rayas paralelas del cruzado: [(x1, y1, x2, y2)] en mm.
+
+        No son de 45 grados: en el cheque chileno cruzan casi toda la altura
+        y avanzan poco a lo largo, así que el alto y el ancho se declaran por
+        separado. Las coordenadas van en el marco de la HOJA, igual que todas
+        las demas, no en el del cheque.
+        """
+        self.ensure_one()
+        journal = self._vsg_journal()
+        ancho = journal.vsg_check_cross_width or 27.0
+        alto = journal.vsg_check_cross_height or 52.0
+        # separacion perpendicular pedida, repartida sobre los dos ejes
+        largo = (ancho ** 2 + alto ** 2) ** 0.5 or 1.0
+        sep = journal.vsg_check_cross_gap or 3.5
+        dx, dy = sep * alto / largo, sep * ancho / largo
+        x0 = journal.vsg_check_cross_x + journal.vsg_check_offset_x + journal.vsg_check_sheet_x
+        y0 = journal.vsg_check_cross_y + journal.vsg_check_offset_y + journal.vsg_check_sheet_y
+        return [
+            (x0 + i * dx, y0 + alto + i * dy, x0 + ancho + i * dx, y0 + i * dy)
+            for i in (0, 1)
+        ]
+
+    # ------------------------------------------------------------------
+    # Acciones
+    # ------------------------------------------------------------------
+    def action_vsg_print_check(self):
+        """Abre el asistente con las opciones del cheque."""
+        checks = self._vsg_check_printable()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Imprimir cheque"),
+            "res_model": "vsg.check.print.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {"default_check_ids": checks.ids},
+        }

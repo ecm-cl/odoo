@@ -10,7 +10,7 @@
                              overflow: hidden !important; }
             </style>
             <t t-foreach="docs" t-as="journal">
-                <!-- Se dibuja medio milimetro por debajo del alto de la pagina:
+                <!-- Se dibuja medio milímetro por debajo del alto de la página:
                      a ras exacto wkhtmltopdf desborda y abre una hoja en blanco. -->
                 <div class="page"
                      t-attf-style="position:relative;overflow:hidden;width:#{journal.vsg_check_width - 0.5}mm;height:#{journal.vsg_check_height - 0.5}mm;font-family:Arial,Helvetica,sans-serif;">

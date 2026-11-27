@@ -3,7 +3,7 @@
     <template id="report_vsg_check">
         <t t-call="web.html_container">
             <!-- El layout de informes de Odoo aplica relleno a html, body y .page.
-                 Sobre un cheque eso desplaza todo unos milimetros, asi que se
+                 Sobre un cheque eso desplaza todo unos milímetros, así que se
                  anula: el origen del papel y el del documento deben coincidir. -->
             <style>
                 @page { margin: 0; }
@@ -13,68 +13,99 @@
             </style>
             <t t-foreach="docs" t-as="check">
                 <t t-set="journal" t-value="check.payment_id.journal_id"/>
-                <t t-set="ox" t-value="journal.vsg_check_offset_x"/>
-                <t t-set="oy" t-value="journal.vsg_check_offset_y"/>
+                <t t-set="opts" t-value="vsg_options[check.id]"/>
+                <!-- ox/oy llevan de una vez la calibración de la impresora y la
+                     posición del cheque dentro de la hoja, de modo que las
+                     coordenadas del diario se siguen midiendo desde el borde
+                     superior izquierdo del cheque. -->
+                <t t-set="ox" t-value="journal.vsg_check_offset_x + journal.vsg_check_sheet_x"/>
+                <t t-set="oy" t-value="journal.vsg_check_offset_y + journal.vsg_check_sheet_y"/>
                 <t t-set="date" t-value="check._vsg_date_parts()"/>
                 <div class="page vsg-check"
-                     t-attf-style="position:relative;width:#{journal.vsg_check_width}mm;height:#{journal.vsg_check_height}mm;font-size:#{journal.vsg_check_font_size}pt;font-family:Arial,Helvetica,sans-serif;">
+                     t-attf-style="position:relative;width:#{journal.vsg_check_sheet_long}mm;height:#{journal.vsg_check_sheet_short}mm;font-size:#{journal.vsg_check_font_size}pt;font-family:Arial,Helvetica,sans-serif;#{'' if check_last else 'page-break-after:always;'}">
+
+                    <!-- Cruzado: el cheque solo se puede depositar en cuenta.
+                         Se dibuja en SVG porque wkhtmltopdf no rota divs. -->
+                    <t t-if="opts['crossed']">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             style="position:absolute;left:0;top:0;"
+                             t-attf-width="#{journal.vsg_check_sheet_long}mm"
+                             t-attf-height="#{journal.vsg_check_sheet_short}mm"
+                             t-attf-viewBox="0 0 #{journal.vsg_check_sheet_long} #{journal.vsg_check_sheet_short}">
+                            <t t-foreach="check._vsg_cross_lines()" t-as="raya">
+                                <line t-att-x1="raya[0]" t-att-y1="raya[1]"
+                                      t-att-x2="raya[2]" t-att-y2="raya[3]"
+                                      stroke="black" stroke-linecap="round"
+                                      t-att-stroke-width="journal.vsg_check_cross_thickness"/>
+                            </t>
+                        </svg>
+                    </t>
 
                     <!-- Ciudad de emision -->
-                    <div t-attf-style="position:absolute;left:#{journal.vsg_check_place_x + ox}mm;top:#{journal.vsg_check_place_y + oy}mm;font-size:#{check._vsg_place_font()}pt;white-space:nowrap;">
+                    <div t-attf-style="position:absolute;left:#{journal.vsg_check_place_x + ox}mm;top:#{check._vsg_top(journal.vsg_check_place_y, check._vsg_place_font()) + oy}mm;font-size:#{check._vsg_place_font()}pt;white-space:nowrap;">
                         <span t-esc="check._vsg_text(journal.vsg_check_place)"/>
                     </div>
 
-                    <!-- Fecha: en una linea o en casilleros separados -->
+                    <!-- Fecha: en una línea o en casilleros separados -->
                     <t t-if="journal.vsg_check_cells">
-                        <t t-foreach="check._vsg_date_digit_cells()" t-as="celda">
-                            <div t-attf-style="position:absolute;left:#{celda[0] + ox - 2.5}mm;top:#{journal.vsg_check_cells_y + oy}mm;width:5mm;text-align:center;white-space:nowrap;">
+                        <t t-foreach="check._vsg_date_digit_cells(opts['year_prefix'])" t-as="celda">
+                            <div t-attf-style="position:absolute;left:#{celda[0] + ox - 2.5}mm;top:#{check._vsg_top(journal.vsg_check_cells_y, journal.vsg_check_font_size) + oy}mm;width:5mm;text-align:center;white-space:nowrap;">
                                 <span t-esc="celda[1]"/>
                             </div>
                         </t>
                     </t>
                     <t t-elif="not journal.vsg_check_date_split">
-                        <div t-attf-style="position:absolute;left:#{journal.vsg_check_date_x + ox}mm;top:#{journal.vsg_check_date_y + oy}mm;white-space:nowrap;">
+                        <div t-attf-style="position:absolute;left:#{journal.vsg_check_date_x + ox}mm;top:#{check._vsg_top(journal.vsg_check_date_y, journal.vsg_check_font_size) + oy}mm;white-space:nowrap;">
                             <span t-esc="check._vsg_text(date['full'])"/>
                         </div>
                     </t>
                     <t t-else="">
-                        <div t-attf-style="position:absolute;left:#{journal.vsg_check_day_x + ox}mm;top:#{journal.vsg_check_date_y + oy}mm;white-space:nowrap;">
+                        <div t-attf-style="position:absolute;left:#{journal.vsg_check_day_x + ox}mm;top:#{check._vsg_top(journal.vsg_check_date_y, journal.vsg_check_font_size) + oy}mm;white-space:nowrap;">
                             <span t-esc="date['day']"/>
                         </div>
-                        <div t-attf-style="position:absolute;left:#{journal.vsg_check_month_x + ox}mm;top:#{journal.vsg_check_date_y + oy}mm;white-space:nowrap;">
+                        <div t-attf-style="position:absolute;left:#{journal.vsg_check_month_x + ox}mm;top:#{check._vsg_top(journal.vsg_check_date_y, journal.vsg_check_font_size) + oy}mm;white-space:nowrap;">
                             <span t-esc="check._vsg_text(date['month'])"/>
                         </div>
-                        <div t-attf-style="position:absolute;left:#{journal.vsg_check_year_x + ox}mm;top:#{journal.vsg_check_date_y + oy}mm;white-space:nowrap;">
+                        <div t-attf-style="position:absolute;left:#{journal.vsg_check_year_x + ox}mm;top:#{check._vsg_top(journal.vsg_check_date_y, journal.vsg_check_font_size) + oy}mm;white-space:nowrap;">
                             <span t-esc="date['year']"/>
                         </div>
                     </t>
 
-                    <!-- Monto en numeros -->
+                    <!-- Monto en números -->
                     <t t-if="journal.vsg_check_cells">
                         <t t-foreach="check._vsg_amount_digit_cells()" t-as="celda">
-                            <div t-attf-style="position:absolute;left:#{celda[0] + ox - journal.vsg_check_amount_pitch / 2.0}mm;top:#{journal.vsg_check_amount_cells_y + oy}mm;width:#{journal.vsg_check_amount_pitch}mm;text-align:center;white-space:nowrap;font-weight:bold;">
+                            <div t-attf-style="position:absolute;left:#{celda[0] + ox - journal.vsg_check_amount_pitch / 2.0}mm;top:#{check._vsg_top(journal.vsg_check_amount_cells_y, journal.vsg_check_font_size) + oy}mm;width:#{journal.vsg_check_amount_pitch}mm;text-align:center;white-space:nowrap;font-weight:bold;">
                                 <span t-esc="celda[1]"/>
                             </div>
                         </t>
                     </t>
                     <t t-else="">
-                        <div t-attf-style="position:absolute;left:#{journal.vsg_check_amount_x + ox}mm;top:#{journal.vsg_check_amount_y + oy}mm;white-space:nowrap;font-weight:bold;">
+                        <div t-attf-style="position:absolute;left:#{journal.vsg_check_amount_x + ox}mm;top:#{check._vsg_top(journal.vsg_check_amount_y, journal.vsg_check_font_size) + oy}mm;white-space:nowrap;font-weight:bold;">
                             <span t-esc="check._vsg_amount_figures()"/>
                         </div>
                     </t>
 
-                    <!-- Monto en letras, hasta tres lineas -->
+                    <!-- Monto en letras, hasta tres líneas -->
                     <t t-set="words_font" t-value="check._vsg_words_font()"/>
                     <t t-foreach="check._vsg_words_rows()" t-as="fila">
-                        <div t-attf-style="position:absolute;left:#{fila[0] + ox}mm;top:#{fila[1] + oy}mm;width:#{fila[2]}mm;font-size:#{words_font}pt;white-space:nowrap;overflow:hidden;">
+                        <div t-attf-style="position:absolute;left:#{fila[0] + ox}mm;top:#{check._vsg_top(fila[1], words_font) + oy}mm;width:#{fila[2]}mm;font-size:#{words_font}pt;white-space:nowrap;overflow:hidden;">
                             <span t-esc="check._vsg_text(fila[3])"/>
                         </div>
                     </t>
 
                     <!-- Beneficiario -->
-                    <div t-attf-style="position:absolute;left:#{journal.vsg_check_payee_x + ox}mm;top:#{journal.vsg_check_payee_y + oy}mm;width:#{journal.vsg_check_payee_width}mm;white-space:nowrap;overflow:hidden;font-weight:#{'bold' if journal.vsg_check_payee_bold else 'normal'};">
+                    <div t-attf-style="position:absolute;left:#{journal.vsg_check_payee_x + ox}mm;top:#{check._vsg_top(journal.vsg_check_payee_y, journal.vsg_check_font_size) + oy}mm;width:#{journal.vsg_check_payee_width}mm;white-space:nowrap;overflow:hidden;font-weight:#{'bold' if journal.vsg_check_payee_bold else 'normal'};">
                         <span t-esc="check._vsg_text(check._vsg_payee())"/>
                     </div>
+
+                    <!-- Tachado de 'a la orden de' y de 'o al portador'. Va al
+                         final para quedar por encima de los guiones de relleno
+                         del monto en letras, igual que en Flex. -->
+                    <t t-foreach="check._vsg_strike_boxes(opts['endorsement'])" t-as="tachado">
+                        <div t-attf-style="position:absolute;left:#{tachado[0] + ox}mm;top:#{check._vsg_top(tachado[1], journal.vsg_check_strike_font) + oy}mm;width:#{tachado[2]}mm;font-size:#{journal.vsg_check_strike_font}pt;white-space:nowrap;overflow:hidden;">
+                            <span t-esc="tachado[3]"/>
+                        </div>
+                    </t>
                 </div>
             </t>
         </t>
